@@ -1,6 +1,7 @@
 #include "init.h"
 #include "objects.h"
-#include "index.h" // ADDED: Required for add_file()
+#include "index.h"
+#include "commit.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,12 +36,13 @@ int main(int argc, char *argv[]) {
   }
 
   else if (strcmp(command, "commit") == 0) {
-    // FIXED: argc must be at least 4 (./minigit commit -m "message")
-    if (argc < 4 || strcmp(argv[2], "-m") != 0) {
+        if (argc < 4 || strcmp(argv[2], "-m") != 0) {
       fprintf(stderr, "usage: minigit commit -m '<message>' \n");
       return EXIT_FAILURE;
     }
-    printf("Routing to: create_commit(\"%s\")...\n", argv[3]);
+    if (create_commit(argv[3]) != 0) {
+    return EXIT_FAILURE;
+    }
   }
   
   // Temporary!! Test for Objects!
