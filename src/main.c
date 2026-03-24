@@ -3,6 +3,7 @@
 #include "index.h"
 #include "commit.h"
 #include "log.h"
+#include "status.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,6 +64,12 @@ int main(int argc, char *argv[]) {
 
   else if (strcmp(command, "log") == 0) {
     if (print_log() != 0) {
+        return EXIT_FAILURE;
+    }
+  }
+
+  else if (strcmp(command, "status") == 0) {
+    if (print_status() != 0) {
         return EXIT_FAILURE;
     }
   }
