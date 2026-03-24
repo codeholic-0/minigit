@@ -18,7 +18,7 @@ char *write_object(const char *type, const void *data, size_t size) {
     store_data[header_len] = '\0';
     memcpy(store_data + header_len + 1, data, size);
 
-    unsigned char hash[SHA_DIGEST_LENGTH]; // 20 bytes
+    unsigned char hash[SHA_DIGEST_LENGTH];
     SHA1(store_data, store_size, hash);
 
     char *hex_hash = malloc(SHA_DIGEST_LENGTH * 2 + 1);
@@ -62,7 +62,6 @@ char *write_object(const char *type, const void *data, size_t size) {
         perror("Failed to write object file");
     }
 
-    //Cleanup
     free(store_data);
     free(compressed_data);
 
@@ -70,7 +69,6 @@ char *write_object(const char *type, const void *data, size_t size) {
 }
 
 char *hash_object(const char *filepath) {
-    // Read the entire file into memory
     FILE *file = fopen(filepath, "rb");
     if (!file) {
         perror("Failed to open file");
@@ -90,9 +88,43 @@ char *hash_object(const char *filepath) {
     }
     fclose(file);
 
-    // Pass the file content to our new core engine, labeling it a "blob"
     char *hash = write_object("blob", file_content, file_size);
     
     free(file_content);
     return hash;
+}
+
+char *read_object(const char *hash, size_t *out_size) {
+    char file_path[512];
+    snprintf(file_path, sizeof(file_path), ".minigit/objects/%.2s/%s", hash, hash + 2);
+
+    FILE *f = fopen(file_path, "rb");
+    if (!f) return NULL;
+
+    fseek(f, 0, SEEK_END);
+    long comp_size = ftell(f);
+    rewind(f);
+
+    unsigned char *comp_data = malloc(comp_size);
+    if (fread(comp_data, 1, comp_size, f) != (size_t)comp_size) {
+        free(comp_data);
+        fclose(f);
+        return NULL;
+    }
+    fclose(f);
+
+    uLongf uncomp_size = 1024 * 1024; // 1MB buffer
+    unsigned char *uncomp_data = malloc(uncomp_size);
+
+    if (uncompress(uncomp_data, &uncomp_size, comp_data, comp_size) != Z_OK) {
+        fprintf(stderr, "Failed to uncompress object %s\n", hash);
+        free(comp_data);
+        free(uncomp_data);
+        return NULL;
+    }
+
+    free(comp_data);
+    if (out_size) *out_size = uncomp_size;
+    
+    return (char *)uncomp_data;
 }
