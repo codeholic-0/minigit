@@ -1,4 +1,4 @@
-#include "/home/droy/Projects/Test/mini_git/include/objects.h"
+#include "objects.h"
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>

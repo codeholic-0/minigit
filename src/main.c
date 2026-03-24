@@ -1,8 +1,10 @@
-#include "/home/droy/Projects/Test/mini_git/include/init.h"
-#include "/home/droy/Projects/Test/mini_git/include/objects.h"
+#include "init.h"
+#include "objects.h"
+#include "index.h" // ADDED: Required for add_file()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 void print_usage() {
   printf("usage: minigit <command> [<args>]\n\n");
   printf("Common Commands: \n init\n add\n commit\n status\n log\n");
@@ -27,19 +29,24 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "usage: minigit add <file>\n");
       return EXIT_FAILURE;
     }
+    if (add_file(argv[2]) != 0) {
+      return EXIT_FAILURE;
+    }
   }
 
   else if (strcmp(command, "commit") == 0) {
-    if (argc < 3 || strcmp(argv[2], "-m") != 0) {
-      fprintf(stderr, "usage: minigit commit -m '<messege>' \n");
+    // FIXED: argc must be at least 4 (./minigit commit -m "message")
+    if (argc < 4 || strcmp(argv[2], "-m") != 0) {
+      fprintf(stderr, "usage: minigit commit -m '<message>' \n");
       return EXIT_FAILURE;
     }
     printf("Routing to: create_commit(\"%s\")...\n", argv[3]);
   }
+  
   // Temporary!! Test for Objects!
   else if (strcmp(command, "hash_object") == 0) {
     if (argc < 3) {
-      fprintf(stderr, "usage: minigit hash_object\n");
+      fprintf(stderr, "usage: minigit hash_object <file>\n");
       return EXIT_FAILURE;
     }
     char *hash = hash_object(argv[2]);
@@ -52,8 +59,11 @@ int main(int argc, char *argv[]) {
   }
 
   else {
-    fprintf(stderr, "minigit: '%s' is not a valid command!", argv[3]);
+    // FIXED: Changed argv[3] to command, otherwise it causes a SegFault 
+    // if the user types `./minigit fake_command`
+    fprintf(stderr, "minigit: '%s' is not a valid command!\n", command);
     return EXIT_FAILURE;
   }
+  
   return EXIT_SUCCESS;
 }
